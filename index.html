@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clover Capital — Investment Architecture Flowchart</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --surface: #141B24;
+    --surface2: #1A2332;
+    --border: #1F2D3D;
+    --border-hover: #2A3F55;
+    --text: #E8EDF3;
+    --text-muted: #7A8BA0;
+    --text-dim: #4A5B6E;
+    --green: #22C55E;
+    --green-dim: rgba(34,197,94,0.12);
+    --green-glow: rgba(34,197,94,0.06);
+    --blue: #3B82F6;
+    --blue-dim: rgba(59,130,246,0.12);
+    --amber: #F59E0B;
+    --amber-dim: rgba(245,158,11,0.12);
+    --red: #EF4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --purple: #A78BFA;
+    --purple-dim: rgba(167,139,250,0.12);
+    --cyan: #06B6D4;
+    --cyan-dim: rgba(6,182,212,0.12);
+    --teal: #14B8A6;
+    --teal-dim: rgba(20,184,166,0.12);
+    --s1: #06B6D4; --s2: #3B82F6; --s3: #22C55E; --s4: #F59E0B;
+    --s5: #EF4444; --s6: #A78BFA; --s7: #14B8A6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 48px 32px; }
+
+  /* ── Header ── */
+  .header { margin-bottom: 48px; }
+  .header-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .header-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .header-brand span { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green); }
+  .header h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; color: #fff; font-weight: 400; line-height: 1.2; }
+  .header .tagline { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+
+  /* ── Stage Pipeline ── */
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--green); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--green) 0%, transparent 100%); opacity: 0.3; }
+
+  .pipeline { display: flex; align-items: stretch; gap: 0; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; }
+  .pipe-stage { flex: 1; min-width: 110px; background: var(--surface); border: 1px solid var(--border); padding: 14px 10px 12px; text-align: center; cursor: pointer; transition: all 0.25s ease; position: relative; }
+  .pipe-stage:first-child { border-radius: 10px 0 0 10px; }
+  .pipe-stage:last-child { border-radius: 0 10px 10px 0; }
+  .pipe-stage:not(:last-child)::after { content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 8px solid var(--border); z-index: 2; }
+  .pipe-stage:hover { background: var(--surface2); border-color: var(--border-hover); z-index: 1; }
+  .pipe-stage.active { border-color: var(--green); background: var(--green-glow); z-index: 1; }
+  .pipe-stage.active::after { border-left-color: var(--green); }
+  .pipe-num { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; font-weight: 400; line-height: 1; }
+  .pipe-name { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.3px; line-height: 1.3; }
+  .pipe-stage.active .pipe-name { color: var(--text); }
+
+  .click-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 20px; }
+
+  /* ── Split Path indicator ── */
+  .split-path { display: flex; align-items: center; gap: 12px; margin: 16px 0 28px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  .split-icon { font-size: 18px; flex-shrink: 0; }
+  .split-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .split-text strong { color: var(--green); font-weight: 600; }
+
+  /* ── Detail Panel ── */
+  .detail { display: none; animation: slideIn 0.3s ease; }
+  .detail.visible { display: block; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 32px; }
+  .detail-top { padding: 20px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); }
+  .detail-badge { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; flex-shrink: 0; }
+  .detail-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; }
+  .detail-obj { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+  .detail-body { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0; }
+  @media (max-width: 900px) { .detail-body { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .detail-body { grid-template-columns: 1fr; } }
+
+  .detail-col { padding: 18px 20px; border-right: 1px solid var(--border); }
+  .detail-col:last-child { border-right: none; }
+  .detail-col-header { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid; display: flex; align-items: center; gap: 6px; }
+  .detail-col-header .icon { width: 14px; height: 14px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; color: #fff; }
+
+  .col-ai .detail-col-header { color: var(--green); border-color: var(--green); }
+  .col-ai .detail-col-header .icon { background: var(--green); }
+  .col-output .detail-col-header { color: var(--purple); border-color: var(--purple); }
+  .col-output .detail-col-header .icon { background: var(--purple); }
+  .col-human .detail-col-header { color: var(--amber); border-color: var(--amber); }
+  .col-human .detail-col-header .icon { background: var(--amber); }
+  .col-data .detail-col-header { color: var(--cyan); border-color: var(--cyan); }
+  .col-data .detail-col-header .icon { background: var(--cyan); }
+
+  .detail-item { font-size: 12px; color: var(--text); padding: 4px 0 4px 14px; position: relative; line-height: 1.45; }
+  .detail-item::before { content: ''; position: absolute; left: 0; top: 10px; width: 5px; height: 5px; border-radius: 50%; }
+  .col-ai .detail-item::before { background: var(--green); }
+  .col-output .detail-item::before { background: var(--purple); }
+  .col-human .detail-item::before { background: var(--amber); }
+  .col-data .detail-item::before { background: var(--cyan); }
+  .detail-item .sub { color: var(--text-muted); font-size: 11px; }
+
+  .detail-gate { padding: 12px 24px; background: var(--amber-dim); border-top: 1px solid rgba(245,158,11,0.2); display: flex; align-items: center; gap: 10px; }
+  .gate-icon { width: 20px; height: 20px; border-radius: 4px; background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; flex-shrink: 0; }
+  .gate-text { font-size: 12px; color: var(--amber); font-weight: 600; }
+
+  .detail-link { padding: 10px 24px; background: var(--surface2); border-top: 1px solid var(--border); }
+  .detail-link a { font-size: 11px; color: var(--blue); text-decoration: none; font-weight: 500; }
+  .detail-link a:hover { text-decoration: underline; }
+  .detail-link span { font-size: 11px; color: var(--text-dim); margin-right: 6px; }
+
+  /* ── System Architecture ── */
+  .arch-section { margin-bottom: 40px; }
+  .arch-flow { display: grid; grid-template-columns: 1fr 36px 1.4fr 36px 1fr; align-items: stretch; gap: 0; }
+  @media (max-width: 900px) { .arch-flow { grid-template-columns: 1fr; gap: 10px; } .arch-arrow-col { transform: rotate(90deg); } }
+  .arch-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .arch-box-header { padding: 10px 14px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+  .arch-box.sources .arch-box-header { background: linear-gradient(135deg, #0E4D6E, #1E3A5F); }
+  .arch-box.engine .arch-box-header { background: linear-gradient(135deg, #146B3A, #16A34A); }
+  .arch-box.outputs .arch-box-header { background: linear-gradient(135deg, #4A2C6A, #6D45A0); }
+  .arch-box-body { padding: 12px 14px; }
+  .arch-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .arch-row:last-child { border: none; }
+  .arch-row .name { color: var(--text); font-weight: 600; }
+  .badge { font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .badge-active { background: var(--green-dim); color: var(--green); }
+  .badge-eval { background: var(--amber-dim); color: var(--amber); }
+  .badge-planned { background: rgba(74,91,110,0.2); color: var(--text-muted); }
+  .arch-arrow-col { display: flex; align-items: center; justify-content: center; }
+  .arch-arrow-col svg { width: 24px; height: 24px; color: var(--green); }
+  .eng-item { margin-bottom: 10px; }
+  .eng-item:last-child { margin-bottom: 0; }
+  .eng-label { font-size: 12px; font-weight: 700; color: var(--green); }
+  .eng-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; line-height: 1.4; }
+  .out-item { font-size: 12px; color: var(--text); padding: 5px 0 5px 12px; border-left: 2px solid #6D45A0; margin-bottom: 3px; }
+
+  /* ── Monitoring ── */
+  .mon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  @media (max-width: 900px) { .mon-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .mon-grid { grid-template-columns: 1fr; } }
+  .mon-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .mon-card-header { padding: 10px; text-align: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .mon-card.h24 .mon-card-header { background: linear-gradient(135deg, #DC2626, #EF4444); }
+  .mon-card.w .mon-card-header { background: linear-gradient(135deg, #16A34A, #22C55E); }
+  .mon-card.m .mon-card-header { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+  .mon-card.q .mon-card-header { background: linear-gradient(135deg, #D97706, #F59E0B); }
+  .mon-card-body { padding: 14px; }
+  .mon-section-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; margin-top: 10px; }
+  .mon-section-label:first-child { margin-top: 0; }
+  .mon-card.h24 .mon-section-label { color: var(--red); }
+  .mon-card.w .mon-section-label { color: var(--green); }
+  .mon-card.m .mon-section-label { color: var(--blue); }
+  .mon-card.q .mon-section-label { color: var(--amber); }
+  .mon-item { font-size: 11px; color: var(--text); padding: 3px 0 3px 12px; position: relative; line-height: 1.4; }
+  .mon-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 4px; height: 4px; border-radius: 50%; }
+  .mon-card.h24 .mon-item::before { background: var(--red); }
+  .mon-card.w .mon-item::before { background: var(--green); }
+  .mon-card.m .mon-item::before { background: var(--blue); }
+  .mon-card.q .mon-item::before { background: var(--amber); }
+  .mon-trigger { font-size: 10px; color: var(--text-muted); margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .mon-trigger strong { color: var(--text); }
+
+  .escalation-bar { background: var(--red-dim); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 14px 18px; margin-top: 14px; display: flex; align-items: center; gap: 12px; }
+  .esc-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--red); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .esc-icon svg { width: 14px; height: 14px; color: #fff; }
+  .esc-content { flex: 1; }
+  .esc-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--red); margin-bottom: 2px; }
+  .esc-text { font-size: 12px; color: var(--text); }
+
+  /* ── Footer ── */
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 11px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-brand"><div class="dot"></div><span>Clover Capital</span></div>
+    <h1>AI-Powered Investment Architecture</h1>
+    <p class="tagline">Interactive process flowchart — seven-stage lifecycle with decision gates and AI integration</p>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="section-label">Investment Lifecycle</div>
+  <div class="pipeline">
+    <div class="pipe-stage active" onclick="show(1)" id="p1"><div class="pipe-num" style="color:var(--s1)">01</div><div class="pipe-name">Sector ID &amp;<br>Review</div></div>
+    <div class="pipe-stage" onclick="show(2)" id="p2"><div class="pipe-num" style="color:var(--s2)">02</div><div class="pipe-name">Protocol<br>Selection</div></div>
+    <div class="pipe-stage" onclick="show(3)" id="p3"><div class="pipe-num" style="color:var(--s3)">03</div><div class="pipe-name">Initial Review<br>Template</div></div>
+    <div class="pipe-stage" onclick="show(4)" id="p4"><div class="pipe-num" style="color:var(--s4)">04</div><div class="pipe-name">Founder/Team<br>Interview</div></div>
+    <div class="pipe-stage" onclick="show(5)" id="p5"><div class="pipe-num" style="color:var(--s5)">05</div><div class="pipe-name">Deep Investment<br>Assessment</div></div>
+    <div class="pipe-stage" onclick="show(6)" id="p6"><div class="pipe-num" style="color:var(--s6)">06</div><div class="pipe-name">IC &amp;<br>Execution</div></div>
+    <div class="pipe-stage" onclick="show(7)" id="p7"><div class="pipe-num" style="color:var(--s7)">07</div><div class="pipe-name">Monitoring</div></div>
+  </div>
+  <p class="click-hint">Click any stage to view details below</p>
+
+  <div class="split-path">
+    <div class="split-icon">⑥➜</div>
+    <div class="split-text"><strong>Path A:</strong> Restart at Stage 1 for a new sector&ensp;|&ensp;<strong>Path B:</strong> Enter Stage 7 monitoring cycle for existing positions and watchlist protocols</div>
+  </div>
+
+  <!-- ═══ STAGE 1 ═══ -->
+  <div class="detail visible" id="d1">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s1)">01</div>
+        <div>
+          <div class="detail-title">Sector Identification &amp; Review</div>
+          <div class="detail-obj">Top-down DeFi sector scan to identify and rank high-potential sectors by revenue, TVL growth, user adoption, and BTC-relative performance.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item">Cross-Sector Identification Prompt</div>
+          <div class="detail-item">Sector-Screening Prompt</div>
+          <div class="detail-item">Revenue, TVL, growth &amp; valuation metrics</div>
+          <div class="detail-item">BTC-relative performance data</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">Ranked sector dashboard</div>
+          <div class="detail-item">Scoring summary</div>
+          <div class="detail-item">BTC-relative performance report</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">Strategic relevance assessment</div>
+          <div class="detail-item">Industry knowledge &amp; theme tracking</div>
+          <div class="detail-item">Qualitative overlay on rankings</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">Token Terminal <span class="sub">(MCP)</span></div>
+          <div class="detail-item">Glassnode <span class="sub">(MCP)</span></div>
+          <div class="detail-item">CoinGecko <span class="sub">(API)</span></div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Decision Gate: PM approves sectors &amp; protocol shortlists to proceed</div></div>
+      <div class="detail-link">
+        <span>Prompts:</span>
+        <a href="https://docs.google.com/spreadsheets/d/1XJo2KDny5d_90Wk3TLcoL2RP3bU3kuTFVRalCNy5RPw/edit?gid=2030660345#gid=2030660345" target="_blank">Sector Review Prompt</a>&ensp;·&ensp;
+        <a href="https://docs.google.com/spreadsheets/d/1XJo2KDny5d_90Wk3TLcoL2RP3bU3kuTFVRalCNy5RPw/edit?gid=356082965#gid=356082965" target="_blank">Cross-Sector Review Prompt</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STAGE 2 ═══ -->
+  <div class="detail" id="d2">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s2)">02</div>
+        <div>
+          <div class="detail-title">Protocol Selection</div>
+          <div class="detail-obj">Rank protocols within approved sectors, distinguishing durable adoption from incentive-driven activity.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item">Protocol rankings by revenue &amp; growth</div>
+          <div class="detail-item">Valuation &amp; structure comparisons</div>
+          <div class="detail-item">Trend analysis: organic vs incentivised</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">Protocol rankings by revenue, growth, valuation, token structure</div>
+          <div class="detail-item">Trend analysis report</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">Strategic insight &amp; qualitative judgment</div>
+          <div class="detail-item">Proprietary intelligence &amp; relationships</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">Token Terminal <span class="sub">(MCP)</span></div>
+          <div class="detail-item">Glassnode <span class="sub">(MCP)</span></div>
+          <div class="detail-item">CoinGecko <span class="sub">(API)</span></div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Decision Gate: PM confirms final protocol shortlist for IRT</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ STAGE 3 ═══ -->
+  <div class="detail" id="d3">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s3)">03</div>
+        <div>
+          <div class="detail-title">Initial Review Template (IRT)</div>
+          <div class="detail-obj">Most Claude-intensive stage. Generate individual IRTs per protocol, then merge into a single comparative document.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item"><strong style="color:var(--green)">IRT Generation</strong></div>
+          <div class="detail-item">Claude Project per protocol (instruction prompt + docs)</div>
+          <div class="detail-item">IRT covering: market position, financials, tokenomics, team, roadmap</div>
+          <div class="detail-item" style="margin-top:8px"><strong style="color:var(--green)">IRT Merge</strong></div>
+          <div class="detail-item">Cross-protocol benchmarking</div>
+          <div class="detail-item">BTC-relative pricing integration</div>
+          <div class="detail-item">Red flag identification &amp; standout signals</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">Completed IRT per protocol</div>
+          <div class="detail-item">Merged comparison document</div>
+          <div class="detail-item">Cross-protocol rankings</div>
+          <div class="detail-item">Flagged items &amp; standout signals</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">Analyst confirms IRT completeness</div>
+          <div class="detail-item">Review merged document</div>
+          <div class="detail-item">Identify candidates for interview</div>
+          <div class="detail-item">Flag questions &amp; concerns</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">Token Terminal <span class="sub">(MCP + reports)</span></div>
+          <div class="detail-item">Glassnode <span class="sub">(MCP)</span></div>
+          <div class="detail-item">CoinGecko <span class="sub">(CSV)</span></div>
+          <div class="detail-item">Messari <span class="sub">(reports)</span></div>
+          <div class="detail-item">Bidclub <span class="sub">(reports)</span></div>
+          <div class="detail-item">Audit reports <span class="sub">(upload)</span></div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Decision Gate: PM reviews merged IRT → advance to interview or watchlist</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ STAGE 4 ═══ -->
+  <div class="detail" id="d4">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s4)">04</div>
+        <div>
+          <div class="detail-title">Founder / Team Interview</div>
+          <div class="detail-obj">Prepare structured interview materials from completed IRT, assess leadership, then synthesise findings.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item">Structured question set (founding story, strategy, tokenomics, holdings, financials)</div>
+          <div class="detail-item">Protocol-specific due diligence questions</div>
+          <div class="detail-item">Competitive landscape briefing</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">Interview question set</div>
+          <div class="detail-item">Competitive briefing doc</div>
+          <div class="detail-item">Post-interview summary</div>
+          <div class="detail-item">Qualitative assessment</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">PM conducts interview</div>
+          <div class="detail-item">Assesses integrity &amp; alignment</div>
+          <div class="detail-item">Evaluates strategic vision firsthand</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">Completed IRT</div>
+          <div class="detail-item">Public disclosures &amp; X/Twitter</div>
+          <div class="detail-item">Token Terminal <span class="sub">(competitor data)</span></div>
+          <div class="detail-item">Glassnode <span class="sub">(competitor data)</span></div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Decision Gate: PM decides whether to proceed to DIA</div></div>
+      <div class="detail-link">
+        <span>Template:</span>
+        <a href="https://docs.google.com/document/d/1B7265pZIdKQUoKunvdjA7d4WIUCpTcmAvFuM8AvWNSM/edit?tab=t.0" target="_blank">Founder Interview Template</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STAGE 5 ═══ -->
+  <div class="detail" id="d5">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s5)">05</div>
+        <div>
+          <div class="detail-title">Deep Investment Assessment (DIA)</div>
+          <div class="detail-obj">Full qualitative and quantitative evaluation consolidating modelling, risk assessment, and investment proposal.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item">Bear / Base / Bull scenario models</div>
+          <div class="detail-item">Expected performance vs BTC</div>
+          <div class="detail-item">Liquidity review &amp; risk assessment</div>
+          <div class="detail-item">Stress testing scenarios</div>
+          <div class="detail-item">Portfolio integration analysis</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">Consolidated DIA document</div>
+          <div class="detail-item">Bear/Base/Bull financial models</div>
+          <div class="detail-item">Portfolio integration memo (allocation, liquidity, exit triggers)</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">Define diligence scope</div>
+          <div class="detail-item">Analyst investment proposal</div>
+          <div class="detail-item">IC review &amp; challenge</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">Completed IRT &amp; interview notes</div>
+          <div class="detail-item">Token Terminal <span class="sub">(MCP)</span></div>
+          <div class="detail-item">Glassnode <span class="sub">(MCP)</span></div>
+          <div class="detail-item">CoinGecko <span class="sub">(API)</span></div>
+          <div class="detail-item">Financial modelling workpapers</div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Decision Gate: IC discussion → PM decides invest / decline / defer</div></div>
+      <div class="detail-link">
+        <span>Template:</span>
+        <a href="https://docs.google.com/document/d/1QR9lIx-gLRpLjSCvyjpxuHuSCil3RAXk8VtVnJsVG7w/edit?tab=t.0#heading=h.195s6mqwksq9" target="_blank">Detailed Investment Assessment Template</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STAGE 6 ═══ -->
+  <div class="detail" id="d6">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s6)">06</div>
+        <div>
+          <div class="detail-title">IC &amp; Execution</div>
+          <div class="detail-obj">Present to Investment Committee, execute approved trades, and log positions.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item">Trading plan preparation (entry method, sizing, staking)</div>
+          <div class="detail-item">Liquidity analysis</div>
+          <div class="detail-item">Portfolio impact assessment</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">Trading plan document</div>
+          <div class="detail-item">Executed position log</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">PM approves, declines, or defers</div>
+          <div class="detail-item">Execution follows approved terms</div>
+          <div class="detail-item">Position logged and confirmed</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">DIA document</div>
+          <div class="detail-item">Portfolio integration summary</div>
+          <div class="detail-item">Liquidity data</div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Decision Gate: PM retains final authority — approve, decline, or defer</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ STAGE 7 ═══ -->
+  <div class="detail" id="d7">
+    <div class="detail-card">
+      <div class="detail-top">
+        <div class="detail-badge" style="background:var(--s7)">07</div>
+        <div>
+          <div class="detail-title">Monitoring</div>
+          <div class="detail-obj">Continuous surveillance across four cadences for all invested and watchlist protocols. See cadence detail below.</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col col-ai">
+          <div class="detail-col-header"><div class="icon">⚡</div>AI-Prepared Inputs</div>
+          <div class="detail-item">24hr social &amp; market event scanning</div>
+          <div class="detail-item">Weekly metrics compilation</div>
+          <div class="detail-item">Monthly sector screening re-run</div>
+          <div class="detail-item">Quarterly scenario revalidation</div>
+          <div class="detail-item">Threshold-based escalation detection</div>
+        </div>
+        <div class="detail-col col-output">
+          <div class="detail-col-header"><div class="icon">◆</div>Outputs</div>
+          <div class="detail-item">24hr escalation alerts</div>
+          <div class="detail-item">Weekly monitoring report</div>
+          <div class="detail-item">Monthly sector rotation memo</div>
+          <div class="detail-item">Quarterly IC review pack</div>
+        </div>
+        <div class="detail-col col-human">
+          <div class="detail-col-header"><div class="icon">●</div>Human Input</div>
+          <div class="detail-item">Act on escalation alerts</div>
+          <div class="detail-item">Hold / trim / exit decisions</div>
+          <div class="detail-item">Rebalance and allocation changes</div>
+          <div class="detail-item">Quarterly IC review participation</div>
+        </div>
+        <div class="detail-col col-data">
+          <div class="detail-col-header"><div class="icon">◎</div>Data Sources</div>
+          <div class="detail-item">Token Terminal <span class="sub">(MCP)</span></div>
+          <div class="detail-item">Glassnode <span class="sub">(MCP)</span></div>
+          <div class="detail-item">CoinGecko <span class="sub">(API)</span></div>
+          <div class="detail-item">X/Twitter <span class="sub">(scraping)</span></div>
+          <div class="detail-item">GitHub <span class="sub">(API)</span></div>
+          <div class="detail-item">Governance forums</div>
+        </div>
+      </div>
+      <div class="detail-gate"><div class="gate-icon">⚑</div><div class="gate-text">Cyclical: Path A → Restart at Stage 1 (new sector) &ensp;|&ensp; Path B → Continue monitoring</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ SYSTEM ARCHITECTURE ═══ -->
+  <div class="arch-section">
+    <div class="section-label">System Architecture</div>
+    <div class="arch-flow">
+      <div class="arch-box sources">
+        <div class="arch-box-header">Data Sources</div>
+        <div class="arch-box-body">
+          <div class="arch-row"><span class="name">Token Terminal</span><span class="badge badge-active">MCP + CSV</span></div>
+          <div class="arch-row"><span class="name">Glassnode</span><span class="badge badge-active">MCP + CSV</span></div>
+          <div class="arch-row"><span class="name">CoinGecko</span><span class="badge badge-active">API</span></div>
+          <div class="arch-row"><span class="name">Messari</span><span class="badge badge-eval">Evaluating</span></div>
+          <div class="arch-row"><span class="name">DeFi Llama</span><span class="badge badge-planned">Planned</span></div>
+          <div class="arch-row"><span class="name">Dune Analytics</span><span class="badge badge-planned">Planned</span></div>
+          <div class="arch-row"><span class="name">Audit Reports</span><span class="badge badge-eval">Manual</span></div>
+          <div class="arch-row"><span class="name">Research Reports</span><span class="badge badge-eval">Manual</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow-col">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-4-4 4 4-4 4"/></svg>
+      </div>
+      <div class="arch-box engine">
+        <div class="arch-box-header">Claude — AI Engine</div>
+        <div class="arch-box-body">
+          <div class="eng-item"><div class="eng-label">Claude Projects</div><div class="eng-desc">Per-protocol knowledge bases with system prompts &amp; documents</div></div>
+          <div class="eng-item"><div class="eng-label">MCP Connectors</div><div class="eng-desc">Live data access to Token Terminal &amp; Glassnode</div></div>
+          <div class="eng-item"><div class="eng-label">Prompt Library</div><div class="eng-desc">Screening, IRT generation, comparative analysis, monitoring</div></div>
+          <div class="eng-item"><div class="eng-label">Document Analysis</div><div class="eng-desc">Audits, whitepapers, governance, research ingestion</div></div>
+          <div class="eng-item"><div class="eng-label">Comparative Engine</div><div class="eng-desc">IRT merge, benchmarking, scenario modelling</div></div>
+        </div>
+      </div>
+      <div class="arch-arrow-col">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-4-4 4 4-4 4"/></svg>
+      </div>
+      <div class="arch-box outputs">
+        <div class="arch-box-header">Investment Outputs</div>
+        <div class="arch-box-body">
+          <div class="out-item">Sector Rankings &amp; Dashboards</div>
+          <div class="out-item">Protocol Shortlists</div>
+          <div class="out-item">Individual IRTs</div>
+          <div class="out-item">Merged IRT Comparisons</div>
+          <div class="out-item">Interview Prep &amp; Summaries</div>
+          <div class="out-item">DIA &amp; Financial Models</div>
+          <div class="out-item">Trading Plans</div>
+          <div class="out-item">Monitoring Reports &amp; Alerts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MONITORING CADENCES ═══ -->
+  <div class="section-label">Monitoring Cadences — Stage 7 Detail</div>
+  <div class="mon-grid">
+    <div class="mon-card h24">
+      <div class="mon-card-header">24-Hour</div>
+      <div class="mon-card-body">
+        <div class="mon-section-label">Focus</div>
+        <div class="mon-item">X/Twitter scraping</div>
+        <div class="mon-item">Portfolio dashboard refresh</div>
+        <div class="mon-item">Macro &amp; governance alerts</div>
+        <div class="mon-section-label">AI Role</div>
+        <div class="mon-item">Autonomous scan of social, pricing, governance</div>
+        <div class="mon-trigger"><strong>Trigger:</strong> Escalation alert to PM</div>
+      </div>
+    </div>
+    <div class="mon-card w">
+      <div class="mon-card-header">Weekly</div>
+      <div class="mon-card-body">
+        <div class="mon-section-label">Focus</div>
+        <div class="mon-item">Revenue &amp; TVL changes</div>
+        <div class="mon-item">Token vs BTC performance</div>
+        <div class="mon-item">Governance updates</div>
+        <div class="mon-item">GitHub PRs &amp; dev velocity</div>
+        <div class="mon-item">Dominance shifts</div>
+        <div class="mon-section-label">AI Role</div>
+        <div class="mon-item">Compile metrics, flag deviations</div>
+        <div class="mon-trigger"><strong>Trigger:</strong> IRT/DIA refresh if thresholds breached</div>
+      </div>
+    </div>
+    <div class="mon-card m">
+      <div class="mon-card-header">Monthly</div>
+      <div class="mon-card-body">
+        <div class="mon-section-label">Focus</div>
+        <div class="mon-item">Re-run sector screening</div>
+        <div class="mon-item">Re-rank sectors</div>
+        <div class="mon-item">Identify new entrants</div>
+        <div class="mon-item">Review valuation shifts</div>
+        <div class="mon-section-label">AI Role</div>
+        <div class="mon-item">Re-execute screening prompts, compare vs prior</div>
+        <div class="mon-trigger"><strong>Trigger:</strong> Sector rotation memo to PM</div>
+      </div>
+    </div>
+    <div class="mon-card q">
+      <div class="mon-card-header">Quarterly</div>
+      <div class="mon-card-body">
+        <div class="mon-section-label">Focus</div>
+        <div class="mon-item">Revalidate thesis per protocol</div>
+        <div class="mon-item">Review allocation sizing</div>
+        <div class="mon-item">Update risk profile</div>
+        <div class="mon-item">Reconfirm exit triggers</div>
+        <div class="mon-section-label">AI Role</div>
+        <div class="mon-item">Regenerate scenarios, stress-test invalidations</div>
+        <div class="mon-trigger"><strong>Trigger:</strong> Formal IC review; PM confirms hold/trim/exit</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="escalation-bar">
+    <div class="esc-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    </div>
+    <div class="esc-content">
+      <div class="esc-label">Escalation Triggers</div>
+      <div class="esc-text">Revenue decline &ensp;·&ensp; TVL decline &ensp;·&ensp; Underperformance vs BTC &ensp;·&ensp; Governance events &ensp;·&ensp; Liquidity deterioration</div>
+    </div>
+  </div>
+
+  <div class="footer">Clover Capital — AI-Powered Investment Architecture — Version 2.0 — February 2026 — Confidential</div>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.detail').forEach(d => d.classList.remove('visible'));
+  document.querySelectorAll('.pipe-stage').forEach(p => p.classList.remove('active'));
+  document.getElementById('d' + n).classList.add('visible');
+  document.getElementById('p' + n).classList.add('active');
+}
+</script>
+</body>
+</html>
